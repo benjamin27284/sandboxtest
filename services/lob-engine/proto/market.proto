@@ -1,0 +1,104 @@
+// Shared Protobuf definitions for cross-service message serialization.
+// Used by: Kafka message payloads, C++ LOB ↔ Python orchestrator,
+//          WebSocket gateway → frontend.
+
+syntax = "proto3";
+package abms.market;
+
+option cc_enable_arenas = true;
+
+// ─── Enums ─────────────────────────────────────────────────────────────────
+
+enum Side {
+    SIDE_UNSPECIFIED = 0;
+    BUY             = 1;
+    SELL            = 2;
+}
+
+enum OrderType {
+    ORDER_TYPE_UNSPECIFIED = 0;
+    LIMIT                 = 1;
+    MARKET                = 2;
+}
+
+// ─── Orders ────────────────────────────────────────────────────────────────
+
+message Order {
+    string    order_id  = 1;
+    string    agent_id  = 2;
+    Side      side      = 3;
+    OrderType type      = 4;
+    double    price     = 5;  // ignored for MARKET orders
+    int32     quantity  = 6;
+    int64     timestamp = 7;
+}
+
+message CancelOrder {
+    string order_id = 1;
+    string agent_id = 2;
+    int64  tick     = 3;
+}
+
+// ─── Executions ────────────────────────────────────────────────────────────
+
+message Execution {
+    string exec_id    = 1;
+    string order_id   = 2;
+    string agent_id   = 3;
+    double fill_price = 4;
+    int32  fill_qty   = 5;
+    int64  timestamp  = 6;
+}
+
+// ─── Market Data ───────────────────────────────────────────────────────────
+
+message PriceLevel {
+    double price    = 1;
+    int64  quantity = 2;
+    int32  count    = 3;  // number of orders at this level
+}
+
+message MarketSnapshot {
+    double mid_price     = 1;
+    double spread        = 2;
+    int32  total_volume  = 3;
+}
+
+message OrderBookSnapshot {
+    int64               tick         = 1;
+    double              mid_price    = 2;
+    double              best_bid     = 3;
+    double              best_ask     = 4;
+    double              spread       = 5;
+    repeated PriceLevel bids         = 6;
+    repeated PriceLevel asks         = 7;
+    int64               timestamp_ns = 8;
+}
+
+message TickSummary {
+    int64             tick          = 1;
+    double            open_price    = 2;
+    double            close_price   = 3;
+    double            high_price    = 4;
+    double            low_price     = 5;
+    int64             volume        = 6;
+    int32             num_trades    = 7;
+    OrderBookSnapshot book_snapshot = 8;
+}
+
+// ─── Event Injection ───────────────────────────────────────────────────────
+
+message NewsEvent {
+    string headline       = 1;
+    double severity_score = 2;
+}
+
+message ExogenousShock {
+    string shock_id     = 1;
+    int64  tick         = 2;
+    string category     = 3;  // "monetary_policy", "geopolitical", "earnings", ...
+    string headline     = 4;
+    string body         = 5;
+    double severity     = 6;  // 0.0 (trivial) to 1.0 (black swan)
+    int64  timestamp_ns = 7;
+}
