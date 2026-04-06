@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+
+# C++ build artifacts
+services/lob-engine/out/
+services/lob-engine/out-release/
+
+# Node
+node_modules/
+.next/
